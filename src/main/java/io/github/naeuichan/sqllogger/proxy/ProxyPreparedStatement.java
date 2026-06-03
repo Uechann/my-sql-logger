@@ -1,5 +1,6 @@
 package io.github.naeuichan.sqllogger.proxy;
 
+import io.github.naeuichan.sqllogger.SqlLogContext;
 import io.github.naeuichan.sqllogger.SqlLoggerProperties;
 import io.github.naeuichan.sqllogger.formatter.SqlLogFormatter;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.TreeMap;
 
@@ -21,14 +23,17 @@ public class ProxyPreparedStatement implements PreparedStatement {
     private final String originalSql;
     private final SqlLoggerProperties properties;
     private final SqlLogFormatter formatter;
+    private final String connectionId;
     private final TreeMap<Integer, String> parameters = new TreeMap<>();
 
     public ProxyPreparedStatement(PreparedStatement delegate, String sql,
-                                  SqlLoggerProperties properties, SqlLogFormatter formatter) {
+                                  SqlLoggerProperties properties, SqlLogFormatter formatter,
+                                  String connectionId) {
         this.delegate = delegate;
         this.originalSql = sql;
         this.properties = properties;
         this.formatter = formatter;
+        this.connectionId = connectionId;
     }
 
     // --- 파라미터 바인딩 메서드 ---
@@ -198,7 +203,8 @@ public class ProxyPreparedStatement implements PreparedStatement {
             return;
         }
         String completeSql = fillParameters(originalSql);
-        String message = formatter.format(completeSql, elapsedMs);
+        SqlLogContext context = new SqlLogContext(completeSql, elapsedMs, connectionId, LocalDateTime.now());
+        String message = formatter.format(context);
         if (elapsedMs < 0) {
             log.warn(message);
         } else {
