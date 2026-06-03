@@ -1,0 +1,52 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'io.github.Uechann'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure:3.4.4'
+    compileOnly 'org.springframework.boot:spring-boot-starter-jdbc:3.4.4'
+    compileOnly 'org.slf4j:slf4j-api:2.0.9'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor:3.4.4'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.4.4'
+    testImplementation 'com.h2database:h2:2.3.232'
+    testImplementation 'org.springframework.boot:spring-boot-starter-jdbc:3.4.4'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'My SQL Logger'
+                description = 'SQL query logger with actual parameter substitution for Spring Boot'
+                url = 'https://github.com/Uechann/my-sql-logger'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+            }
+        }
+    }
+}
