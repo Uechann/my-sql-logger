@@ -26,6 +26,7 @@ public class SqlLoggerAutoConfiguration {
         return switch (properties.getFormat()) {
             case MULTI_LINE -> new MultiLineSqlLogFormatter();
             case JSON -> new JsonSqlLogFormatter();
+            case TABLE -> new TableSqlLogFormatter();
             default -> new SingleLineSqlLogFormatter();
         };
     }

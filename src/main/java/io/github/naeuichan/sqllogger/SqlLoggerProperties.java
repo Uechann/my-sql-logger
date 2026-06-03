@@ -10,14 +10,14 @@ public class SqlLoggerProperties {
     /** -1이면 모든 쿼리 출력, 그 외 값이면 해당 ms 초과 쿼리만 출력 */
     private long slowQueryThresholdMs = -1;
 
-    private Format format = Format.SINGLE_LINE;
+    private Format format = Format.TABLE;
 
     private boolean showExecutionTime = true;
 
     private boolean showParameters = true;
 
     public enum Format {
-        SINGLE_LINE, MULTI_LINE, JSON
+        SINGLE_LINE, MULTI_LINE, JSON, TABLE
     }
 
     public boolean isEnabled() { return enabled; }
