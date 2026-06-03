@@ -73,8 +73,9 @@ Hibernate: select u1_0.id, u1_0.name from users u1_0 where u1_0.id=?
 
 ## 설정
 
-`application.properties`에서 원하는 항목만 추가합니다. 모든 값은 기본값으로 동작하므로 설정을 생략해도 됩니다.
+원하는 항목만 추가합니다. 모든 값은 기본값으로 동작하므로 설정을 생략해도 됩니다.
 
+**application.properties**
 ```properties
 # 전체 on/off (기본값: true)
 sql-logger.enabled=true
@@ -91,6 +92,16 @@ sql-logger.show-execution-time=true
 
 # 파라미터 치환 여부 (기본값: true)
 sql-logger.show-parameters=true
+```
+
+**application.yml**
+```yaml
+sql-logger:
+  enabled: true
+  format: table                  # single_line | multi_line | json | table
+  slow-query-threshold-ms: 100   # -1이면 모두 출력
+  show-execution-time: true
+  show-parameters: true
 ```
 
 ### 로그 포맷 예시
