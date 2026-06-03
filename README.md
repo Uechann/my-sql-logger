@@ -5,7 +5,19 @@
 `build.gradle`에 한 줄 추가하면 설정 없이 바로 동작합니다.
 
 ```
-INFO SQL : [SQL] 3ms | SELECT * FROM users WHERE id = 1 AND name = 'alice'
+INFO SQL :
+┌──────────────────────────────────────────────────────────────────┐
+│ SQL                                                              │
+├────────────┬─────────────────────────────────────────────────────┤
+│ time       │ 2026-06-03 18:15:42.123                             │
+│ connection │ conn-4a3b2c1d                                       │
+│ elapsed    │ 3ms                                                 │
+├────────────┼─────────────────────────────────────────────────────┤
+│ query      │ SELECT *                                            │
+│            │   FROM users                                        │
+│            │  WHERE id = 1                                       │
+│            │    AND name = 'alice'                               │
+└────────────┴─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -40,8 +52,19 @@ dependencies {
 # 기존 (JPA, MyBatis 기본 로그)
 Hibernate: select u1_0.id, u1_0.name from users u1_0 where u1_0.id=?
 
-# my-sql-logger
-[SQL] 3ms | SELECT * FROM users WHERE id = 1 AND name = 'alice'
+# my-sql-logger (table 포맷)
+┌──────────────────────────────────────────────────────────────────┐
+│ SQL                                                              │
+├────────────┬─────────────────────────────────────────────────────┤
+│ time       │ 2026-06-03 18:15:42.123                             │
+│ connection │ conn-4a3b2c1d                                       │
+│ elapsed    │ 3ms                                                 │
+├────────────┼─────────────────────────────────────────────────────┤
+│ query      │ SELECT u1_0.id,                                     │
+│            │        u1_0.name                                    │
+│            │   FROM users u1_0                                   │
+│            │  WHERE u1_0.id = 1                                  │
+└────────────┴─────────────────────────────────────────────────────┘
 ```
 
 파라미터가 치환된 완성된 SQL을 바로 복사해서 DB 클라이언트에 실행할 수 있습니다.
@@ -56,9 +79,9 @@ Hibernate: select u1_0.id, u1_0.name from users u1_0 where u1_0.id=?
 # 전체 on/off (기본값: true)
 sql-logger.enabled=true
 
-# 로그 포맷 (기본값: single_line)
-# single_line | multi_line | json
-sql-logger.format=single_line
+# 로그 포맷 (기본값: table)
+# single_line | multi_line | json | table
+sql-logger.format=table
 
 # 느린 쿼리만 출력 — 이 값(ms) 초과 쿼리만 로깅 (기본값: -1, 모두 출력)
 sql-logger.slow-query-threshold-ms=100
@@ -72,21 +95,66 @@ sql-logger.show-parameters=true
 
 ### 로그 포맷 예시
 
-**`single_line`** (기본값)
+**`table`** (기본값) — 실행 시각, connection, elapsed, 정렬된 SQL을 표로 출력
 ```
-[SQL] 3ms | INSERT INTO orders VALUES (42, 'coffee', 4500)
+┌──────────────────────────────────────────────────────────────────┐
+│ SQL                                                              │
+├────────────┬─────────────────────────────────────────────────────┤
+│ time       │ 2026-06-03 18:15:42.123                             │
+│ connection │ conn-4a3b2c1d                                       │
+│ elapsed    │ 3ms                                                 │
+├────────────┼─────────────────────────────────────────────────────┤
+│ query      │ INSERT INTO orders                                  │
+│            │ VALUES (42, 'coffee', 4500)                         │
+└────────────┴─────────────────────────────────────────────────────┘
+```
+
+**`single_line`**
+```
+[SQL] 3ms | [conn-4a3b2c1d] INSERT INTO orders VALUES (42, 'coffee', 4500)
 ```
 
 **`multi_line`**
 ```
 [SQL]
-time  : 3ms
-query : INSERT INTO orders VALUES (42, 'coffee', 4500)
+time       : 2026-06-03 18:15:42.123
+connection : conn-4a3b2c1d
+elapsed    : 3ms
+query :
+INSERT INTO orders
+VALUES (42, 'coffee', 4500)
 ```
 
 **`json`** — ELK Stack, Datadog 등 로그 수집 시스템 연동 시
 ```json
-{"type":"SQL","elapsed_ms":3,"query":"INSERT INTO orders VALUES (42, 'coffee', 4500)"}
+{"type":"SQL","connection":"conn-4a3b2c1d","elapsed_ms":3,"query":"INSERT INTO orders VALUES (42, 'coffee', 4500)"}
+```
+
+---
+
+## SQL 포맷팅 규칙
+
+`table` / `multi_line` 포맷은 SQL을 다음 규칙으로 자동 정렬합니다.
+
+- **키워드 대문자화** — `SELECT`, `FROM`, `WHERE`, `JOIN` 등
+- **절(Clause)별 줄 바꿈** — 각 절은 새로운 줄에서 시작
+- **오른쪽 정렬** — 주요 키워드를 6자 기준으로 오른쪽 정렬하여 가독성 향상
+- **SELECT 컬럼 정렬** — 컬럼 목록을 세로로 가지런히 정렬
+- **기존 개행 정규화** — JPA/Hibernate 등에서 이미 개행이 포함된 SQL도 올바르게 재포맷
+
+```sql
+-- 입력 (JPA가 생성한 SQL)
+select u1_0.id, u1_0.name, u1_0.email
+from users u1_0
+where u1_0.id = 1 and u1_0.status = 'ACTIVE'
+
+-- 출력
+SELECT u1_0.id,
+       u1_0.name,
+       u1_0.email
+  FROM users u1_0
+ WHERE u1_0.id = 1
+   AND u1_0.status = 'ACTIVE'
 ```
 
 ---
@@ -98,13 +166,20 @@ query : INSERT INTO orders VALUES (42, 'coffee', 4500)
 ```java
 @Bean
 public SqlLogFormatter myFormatter() {
-    return (sql, elapsedMs) -> String.format("[MY-SQL] %dms >> %s", elapsedMs, sql);
+    return context -> String.format("[MY-SQL] %dms | [%s] %s",
+            context.getElapsedMs(), context.getConnectionId(), context.getSql());
 }
 ```
 
-```
-[MY-SQL] 3ms >> SELECT * FROM users WHERE id = 1
-```
+`SqlLogContext`에서 제공하는 정보:
+
+| 메서드 | 설명 |
+|--------|------|
+| `getSql()` | 파라미터 치환 완료된 SQL |
+| `getElapsedMs()` | 실행 시간 (ms) |
+| `getConnectionId()` | 커넥션 식별자 (`conn-{hex}`) |
+| `getExecutedAt()` | 실행 시각 (`LocalDateTime`) |
+| `isError()` | 에러 여부 (`elapsedMs < 0`) |
 
 ---
 
