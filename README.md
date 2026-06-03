@@ -34,7 +34,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.Uechann:my-sql-logger:v1.0.0'
+    implementation 'com.github.Uechann:my-sql-logger:v0.0.1'
 }
 ```
 
@@ -198,13 +198,13 @@ public SqlLogFormatter myFormatter() {
 
 | 버전 | Spring Boot | Java |
 |---|---|---|
-| v1.0.0 | 3.x | 17+ |
+| v0.0.1 | 3.x | 17+ |
 
 ---
 
 ## 배포 방법 (JitPack)
 
 1. GitHub에 코드 push
-2. GitHub → **Releases** → **Create a new release** → 태그 `v1.0.0` 생성
+2. GitHub → **Releases** → **Create a new release** → 태그 `v0.0.1` 생성
 3. [jitpack.io](https://jitpack.io) 에서 `Uechann/my-sql-logger` 검색 후 빌드 확인
 4. 위의 의존성 코드로 바로 사용 가능
