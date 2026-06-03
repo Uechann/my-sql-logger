@@ -74,7 +74,7 @@ public class TableSqlLogFormatter implements SqlLogFormatter {
         // 하단 테두리
         sb.append("└").append(labelHr).append("┴").append(valueHr).append("┘");
 
-        return sb.toString();
+        return "\n" + sb;
     }
 
     private void row(StringBuilder sb, String label, String value, int valueWidth) {
